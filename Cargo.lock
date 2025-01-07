@@ -3,5 +3,9 @@
 version = 3
 
 [[package]]
-name = "tiny-youki"
+name = "cmd"
+version = "0.1.0"
+
+[[package]]
+name = "libcontainer"
 version = "0.1.0"

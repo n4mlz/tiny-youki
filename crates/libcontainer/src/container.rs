@@ -1,5 +1,5 @@
 use crate::*;
-use std::path::PathBuf;
+use std::{io::Result, path::PathBuf};
 
 pub struct Container {
     pub state: State,
@@ -7,7 +7,7 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn new(container_id: &str, bundle_path: &PathBuf) -> Self {
+    pub fn new(container_id: &str, bundle_path: &PathBuf) -> Result<Self> {
         let root = PathBuf::from(BASE_PATH)
             .join(CONTAINER_PATH)
             .join(container_id);
@@ -21,15 +21,17 @@ impl Container {
             root,
         };
 
-        new_container.save();
+        new_container.save()?;
 
-        new_container
+        Ok(new_container)
     }
 
-    pub fn save(&self) {
-        std::fs::create_dir_all(&self.root).unwrap();
+    pub fn save(&self) -> Result<()> {
+        std::fs::create_dir_all(&self.root)?;
         let file_path = self.root.join("state.json");
-        let file = std::fs::File::create(file_path).unwrap();
-        serde_json::to_writer(file, &self.state).unwrap();
+        let file = std::fs::File::create(file_path)?;
+        serde_json::to_writer(file, &self.state)?;
+
+        Ok(())
     }
 }

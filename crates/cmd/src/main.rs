@@ -36,7 +36,9 @@ fn main() {
         } => {
             println!("container_id: {}", container_id);
             println!("bundle: {:?}", bundle);
-            libcontainer::Container::new(container_id, bundle);
+            if let Err(e) = libcontainer::Container::new(container_id, bundle) {
+                eprintln!("Error: {}", e);
+            }
         }
     }
 }

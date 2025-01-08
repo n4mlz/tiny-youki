@@ -36,6 +36,7 @@ fn main() {
         } => {
             println!("container_id: {}", container_id);
             println!("bundle: {:?}", bundle);
+            libcontainer::Container::new(container_id, bundle);
         }
     }
 }

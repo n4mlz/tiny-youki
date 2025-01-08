@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{Read, Result, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -8,7 +8,7 @@ pub struct UnixSocketServer {
 }
 
 impl UnixSocketServer {
-    pub fn new<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         if path.as_ref().exists() {
             std::fs::remove_file(&path)?;
         }
@@ -17,7 +17,7 @@ impl UnixSocketServer {
         Ok(Self { listener })
     }
 
-    pub fn accept(&self) -> std::io::Result<UnixSocketConnection> {
+    pub fn accept(&self) -> Result<UnixSocketConnection> {
         let (stream, _) = self.listener.accept()?;
 
         Ok(UnixSocketConnection::new(stream))
@@ -27,7 +27,7 @@ impl UnixSocketServer {
 pub struct UnixSocketClient;
 
 impl UnixSocketClient {
-    pub fn connect<P: AsRef<Path>>(path: P) -> std::io::Result<UnixSocketConnection> {
+    pub fn connect<P: AsRef<Path>>(path: P) -> Result<UnixSocketConnection> {
         let stream = UnixStream::connect(path)?;
 
         Ok(UnixSocketConnection::new(stream))
@@ -45,13 +45,13 @@ impl UnixSocketConnection {
         }
     }
 
-    pub fn send(&self, message: &str) -> std::io::Result<()> {
+    pub fn send(&self, message: &str) -> Result<()> {
         let mut stream = self.stream.lock().unwrap();
         stream.write_all(message.as_bytes())?;
         stream.flush()
     }
 
-    pub fn receive(&self) -> std::io::Result<String> {
+    pub fn receive(&self) -> Result<String> {
         let mut stream = self.stream.lock().unwrap();
         let mut buffer = [0; 1024];
         let size = stream.read(&mut buffer)?;

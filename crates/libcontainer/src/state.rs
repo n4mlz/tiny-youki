@@ -1,7 +1,7 @@
-use serde::Deserialize;
-use std::collections::HashMap;
+use serde::Serialize;
+use std::{collections::HashMap, path::PathBuf};
 
-#[derive(Deserialize)]
+#[derive(Serialize)]
 pub struct State {
     #[serde(rename = "ociVersion")]
     pub version: String,
@@ -12,7 +12,7 @@ pub struct State {
     pub annotations: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize)]
 pub enum ContainerState {
     #[serde(rename = "creating")]
     Creating,
@@ -22,4 +22,19 @@ pub enum ContainerState {
     Running,
     #[serde(rename = "stopped")]
     Stopped,
+}
+
+impl State {
+    pub fn new(container_id: &str, bundle_path: &PathBuf) -> Self {
+        let bundle_path = std::fs::canonicalize(bundle_path).unwrap();
+
+        State {
+            version: "1.0.0".to_string(), // TODO: implement
+            id: container_id.to_string(),
+            status: ContainerState::Creating,
+            pid: None,
+            bundle: bundle_path.to_str().unwrap().to_string(),
+            annotations: None, // TODO: implement
+        }
+    }
 }

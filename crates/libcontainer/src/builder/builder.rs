@@ -40,10 +40,7 @@ impl ContainerBuilder {
             }
 
             unistd::ForkResult::Child => {
-                server.send("Hello, world!")?;
-
-                let message = server.receive()?;
-                println!("Received message: {}", message);
+                ContainerBuilder::intermediate_process(server)?;
             }
         }
 

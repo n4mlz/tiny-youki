@@ -1,58 +1,52 @@
+use std::cell::RefCell;
 use std::io::{Read, Result, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
-use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::path::PathBuf;
 
-pub struct UnixSocketServer {
+pub struct UnixSocket {
     listener: UnixListener,
 }
 
-impl UnixSocketServer {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        if path.as_ref().exists() {
-            std::fs::remove_file(&path)?;
+impl UnixSocket {
+    pub fn new(path: &PathBuf) -> Result<Self> {
+        if path.exists() {
+            std::fs::remove_file(path)?;
         }
         let listener = UnixListener::bind(path)?;
 
         Ok(Self { listener })
     }
 
-    pub fn accept(&self) -> Result<UnixSocketConnection> {
-        let (stream, _) = self.listener.accept()?;
+    pub fn connect(&self) -> Result<(UnixSocketConnection, UnixSocketConnection)> {
+        let client_stream = UnixStream::connect_addr(&self.listener.local_addr()?)?;
+        let client = UnixSocketConnection::new(client_stream);
 
-        Ok(UnixSocketConnection::new(stream))
-    }
-}
+        let (server_stream, _) = self.listener.accept()?;
+        let server = UnixSocketConnection::new(server_stream);
 
-pub struct UnixSocketClient;
-
-impl UnixSocketClient {
-    pub fn connect<P: AsRef<Path>>(path: P) -> Result<UnixSocketConnection> {
-        let stream = UnixStream::connect(path)?;
-
-        Ok(UnixSocketConnection::new(stream))
+        Ok((server, client))
     }
 }
 
 pub struct UnixSocketConnection {
-    stream: Arc<Mutex<UnixStream>>,
+    stream: RefCell<UnixStream>,
 }
 
 impl UnixSocketConnection {
     fn new(stream: UnixStream) -> Self {
         Self {
-            stream: Arc::new(Mutex::new(stream)),
+            stream: stream.into(),
         }
     }
 
     pub fn send(&self, message: &str) -> Result<()> {
-        let mut stream = self.stream.lock().unwrap();
+        let mut stream = self.stream.borrow_mut();
         stream.write_all(message.as_bytes())?;
         stream.flush()
     }
 
     pub fn receive(&self) -> Result<String> {
-        let mut stream = self.stream.lock().unwrap();
+        let mut stream = self.stream.borrow_mut();
         let mut buffer = [0; 1024];
         let size = stream.read(&mut buffer)?;
         Ok(String::from_utf8_lossy(&buffer[..size]).to_string())

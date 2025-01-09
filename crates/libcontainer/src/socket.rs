@@ -1,14 +1,16 @@
 use std::cell::RefCell;
 use std::io::{Read, Result, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
-use std::path::PathBuf;
+use std::path::Path;
 
 pub struct UnixSocket {
     listener: UnixListener,
 }
 
 impl UnixSocket {
-    pub fn new(path: &PathBuf) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let path = path.as_ref();
+
         if path.exists() {
             std::fs::remove_file(path)?;
         }

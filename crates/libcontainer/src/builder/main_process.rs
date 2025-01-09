@@ -1,6 +1,5 @@
-use nix::unistd;
-
 use crate::*;
+use nix::unistd;
 use std::io::Result;
 
 impl ContainerBuilder {

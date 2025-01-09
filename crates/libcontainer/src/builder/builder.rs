@@ -7,9 +7,9 @@ use std::{
 };
 
 pub struct ContainerBuilder {
-    bundle_path: PathBuf,
-    container: Option<Container>,
-    config: Spec,
+    pub bundle_path: PathBuf,
+    pub container: Option<Container>,
+    pub config: Spec,
 }
 
 impl ContainerBuilder {

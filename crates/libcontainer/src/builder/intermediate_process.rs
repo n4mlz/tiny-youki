@@ -1,11 +1,28 @@
 use nix::sched::{unshare, CloneFlags};
+use oci_spec::runtime::LinuxNamespaceType;
 
 use crate::*;
 use std::io::Result;
 
 impl ContainerBuilder {
     pub fn intermediate_process(&self, socket: UnixSocketConnection) -> Result<()> {
-        unshare(CloneFlags::CLONE_NEWUSER)?;
+        let namespaces = self
+            .config
+            .linux()
+            .as_ref()
+            .and_then(|l| l.namespaces().as_ref());
+
+        if namespaces.is_none() {
+            return Ok(());
+        }
+
+        if namespaces
+            .unwrap()
+            .iter()
+            .any(|ns| ns.typ() == LinuxNamespaceType::User)
+        {
+            unshare(CloneFlags::CLONE_NEWUSER)?;
+        }
 
         socket.send("ready")?;
 

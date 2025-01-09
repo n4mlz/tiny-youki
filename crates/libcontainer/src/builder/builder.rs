@@ -1,4 +1,5 @@
 use crate::*;
+use nix::unistd;
 use oci_spec::runtime::Spec;
 use std::{
     io::Result,
@@ -33,19 +34,16 @@ impl ContainerBuilder {
         let unix_socket = UnixSocket::new(&socket_path)?;
         let (server, client) = unix_socket.connect()?;
 
-        match unsafe { libc::fork() } {
-            -1 => panic!("Fork failed"),
-            0 => {
+        match unsafe { unistd::fork()? } {
+            unistd::ForkResult::Parent { child } => {
+                ContainerBuilder::main_process(client, child)?;
+            }
+
+            unistd::ForkResult::Child => {
                 server.send("Hello, world!")?;
 
                 let message = server.receive()?;
                 println!("Received message: {}", message);
-            }
-            _ => {
-                let message = client.receive()?;
-                println!("Received message: {}", message);
-
-                client.send("Hello, world!")?;
             }
         }
 

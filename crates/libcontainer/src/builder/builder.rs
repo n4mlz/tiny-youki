@@ -36,11 +36,11 @@ impl ContainerBuilder {
 
         match unsafe { unistd::fork()? } {
             unistd::ForkResult::Parent { child } => {
-                ContainerBuilder::main_process(client, child)?;
+                self.main_process(client, child)?;
             }
 
             unistd::ForkResult::Child => {
-                ContainerBuilder::intermediate_process(server)?;
+                self.intermediate_process(server)?;
             }
         }
 

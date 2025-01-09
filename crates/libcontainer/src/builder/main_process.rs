@@ -3,9 +3,11 @@ use nix::unistd;
 use std::io::Result;
 
 impl ContainerBuilder {
-    pub fn main_process(socket: UnixSocketConnection, child_pid: unistd::Pid) -> Result<()> {
+    pub fn main_process(&self, socket: UnixSocketConnection, child_pid: unistd::Pid) -> Result<()> {
         let message = socket.receive()?;
-        println!("Received message: {}", message);
+        if message != "ready" {
+            panic!("Expected 'ready', got '{}'", message);
+        }
 
         socket.send("Hello, world!")?;
 

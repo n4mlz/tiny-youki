@@ -1,4 +1,7 @@
-use nix::sched::{unshare, CloneFlags};
+use nix::{
+    sched::{unshare, CloneFlags},
+    unistd,
+};
 use oci_spec::runtime::LinuxNamespaceType;
 
 use crate::*;
@@ -27,7 +30,12 @@ impl ContainerBuilder {
         socket.send("ready")?;
 
         let message = socket.receive()?;
-        println!("Received message: {}", message);
+        if message != "done" {
+            panic!("Expected 'done', got '{}'", message);
+        }
+
+        unistd::setuid(unistd::Uid::from_raw(0))?;
+        unistd::setgid(unistd::Gid::from_raw(0))?;
 
         Ok(())
     }

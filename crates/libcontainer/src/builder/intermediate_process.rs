@@ -37,6 +37,14 @@ impl ContainerBuilder {
         unistd::setuid(unistd::Uid::from_raw(0))?;
         unistd::setgid(unistd::Gid::from_raw(0))?;
 
+        if namespaces
+            .unwrap()
+            .iter()
+            .any(|ns| ns.typ() == LinuxNamespaceType::Pid)
+        {
+            unshare(CloneFlags::CLONE_NEWPID)?;
+        }
+
         Ok(())
     }
 }

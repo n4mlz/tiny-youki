@@ -1,10 +1,6 @@
-use nix::{
-    sched::{unshare, CloneFlags},
-    unistd,
-};
-use oci_spec::runtime::LinuxNamespaceType;
-
 use crate::*;
+use nix::unistd;
+use oci_spec::runtime::LinuxNamespaceType;
 use std::io::Result;
 
 impl ContainerBuilder {
@@ -15,17 +11,9 @@ impl ContainerBuilder {
             .as_ref()
             .and_then(|l| l.namespaces().as_ref());
 
-        if namespaces.is_none() {
-            return Ok(());
-        }
+        let namespaces = Namespaces::try_from(namespaces)?;
 
-        if namespaces
-            .unwrap()
-            .iter()
-            .any(|ns| ns.typ() == LinuxNamespaceType::User)
-        {
-            unshare(CloneFlags::CLONE_NEWUSER)?;
-        }
+        namespaces.apply_namespace(&LinuxNamespaceType::User)?;
 
         socket.send("ready")?;
 
@@ -37,12 +25,10 @@ impl ContainerBuilder {
         unistd::setuid(unistd::Uid::from_raw(0))?;
         unistd::setgid(unistd::Gid::from_raw(0))?;
 
-        if namespaces
-            .unwrap()
-            .iter()
-            .any(|ns| ns.typ() == LinuxNamespaceType::Pid)
-        {
-            unshare(CloneFlags::CLONE_NEWPID)?;
+        namespaces.apply_namespace(&LinuxNamespaceType::Pid)?;
+
+        if let unistd::ForkResult::Child = unsafe { unistd::fork()? } {
+            self.init_process()?;
         }
 
         Ok(())

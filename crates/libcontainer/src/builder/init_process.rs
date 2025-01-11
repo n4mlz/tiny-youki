@@ -3,7 +3,7 @@ use oci_spec::runtime::LinuxNamespaceType;
 use std::io::Result;
 
 impl ContainerBuilder {
-    pub fn init_process(&self) -> Result<()> {
+    pub fn init_process(&self, socket: UnixSocketConnection) -> Result<()> {
         let namespaces = self
             .config
             .linux()
@@ -15,6 +15,8 @@ impl ContainerBuilder {
         namespaces.apply_namespaces(|ns_type| {
             ns_type != &LinuxNamespaceType::User && ns_type != &LinuxNamespaceType::Pid
         })?;
+
+        socket.send("created")?;
 
         Ok(())
     }

@@ -3,7 +3,11 @@ use nix::unistd;
 use std::{io::Result, process::Command};
 
 impl ContainerBuilder {
-    pub fn main_process(&self, socket: UnixSocketConnection, child_pid: unistd::Pid) -> Result<()> {
+    pub fn main_process(
+        &mut self,
+        socket: UnixSocketConnection,
+        child_pid: unistd::Pid,
+    ) -> Result<()> {
         let message = socket.receive()?;
         if message != "ready" {
             panic!("Expected 'ready', got '{}'", message);
@@ -54,6 +58,24 @@ impl ContainerBuilder {
         }
 
         socket.send("done")?;
+
+        let message = socket.receive()?;
+        if !message.starts_with("init:") {
+            panic!("Expected 'init:', got '{}'", message);
+        }
+
+        let init_pid: i32 = message.strip_prefix("init: ").unwrap().parse().unwrap();
+        self.container.as_mut().unwrap().set_pid(init_pid)?;
+
+        let message = socket.receive()?;
+        if message != "created" {
+            panic!("Expected 'created', got '{}'", message);
+        }
+
+        self.container
+            .as_mut()
+            .unwrap()
+            .update_status(ContainerState::Created)?;
 
         Ok(())
     }

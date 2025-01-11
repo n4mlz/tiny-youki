@@ -27,8 +27,14 @@ impl ContainerBuilder {
 
         namespaces.apply_namespace(&LinuxNamespaceType::Pid)?;
 
-        if let unistd::ForkResult::Child = unsafe { unistd::fork()? } {
-            self.init_process()?;
+        match unsafe { unistd::fork()? } {
+            unistd::ForkResult::Parent { child } => {
+                socket.send(&format!("init: {}", child))?;
+            }
+
+            unistd::ForkResult::Child => {
+                self.init_process(socket)?;
+            }
         }
 
         Ok(())

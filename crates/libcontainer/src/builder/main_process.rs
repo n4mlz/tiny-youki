@@ -61,7 +61,7 @@ impl ContainerBuilder {
 
         let message = socket.receive()?;
         if !message.starts_with("init:") {
-            panic!("Expected 'init:', got '{}'", message);
+            panic!("Expected 'init: pid', got '{}'", message);
         }
 
         let init_pid: i32 = message.strip_prefix("init: ").unwrap().parse().unwrap();

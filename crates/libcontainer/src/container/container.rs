@@ -38,4 +38,14 @@ impl Container {
 
         Ok(())
     }
+
+    pub fn update_status(&mut self, status: ContainerState) -> Result<()> {
+        self.state.status = status;
+        self.save()
+    }
+
+    pub fn set_pid(&mut self, pid: i32) -> Result<()> {
+        self.state.pid = Some(pid);
+        self.save()
+    }
 }

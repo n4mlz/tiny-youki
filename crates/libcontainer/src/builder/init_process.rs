@@ -16,6 +16,17 @@ impl ContainerBuilder {
             ns_type != &LinuxNamespaceType::User && ns_type != &LinuxNamespaceType::Pid
         })?;
 
+        setup_uts(&self.config)?;
+
+        let mounter = Mounter::new(
+            self.bundle_path
+                .join(self.config.root().as_ref().unwrap().path()),
+            self.container.as_ref().unwrap().root.join("rootfs"),
+            self.config.mounts().as_ref().unwrap().to_vec(),
+        );
+
+        mounter.setup_rootfs()?;
+
         socket.send("created")?;
 
         Ok(())

@@ -1,5 +1,6 @@
 use crate::*;
 use std::{
+    fs::create_dir_all,
     io::Result,
     path::{Path, PathBuf},
 };
@@ -32,7 +33,7 @@ impl Container {
     }
 
     pub fn save(&self) -> Result<()> {
-        std::fs::create_dir_all(&self.root)?;
+        create_dir_all(&self.root)?;
         let file_path = self.root.join("state.json");
         self.state.save(file_path)?;
 

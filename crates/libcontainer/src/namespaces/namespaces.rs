@@ -59,17 +59,15 @@ impl Namespaces {
                 // TODO: implement setns
                 return Err(Error::new(
                     std::io::ErrorKind::Other,
-                    "setns is not implemented",
+                    "setns has not yet been implemented",
                 ));
             }
             None => {
                 // TODO: implement unshare for cgroup and network
                 if ns_type == &LinuxNamespaceType::Cgroup || ns_type == &LinuxNamespaceType::Network
                 {
-                    return Err(Error::new(
-                        std::io::ErrorKind::Other,
-                        "unshare is not implemented for cgroup and network",
-                    ));
+                    println!("unshare for cgroup and network has not yet been implemented");
+                    return Ok(());
                 }
 
                 let flag = get_clone_flag(ns_type)?;

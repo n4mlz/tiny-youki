@@ -115,7 +115,7 @@ impl Mounter {
 
             // TODO: implement mount for cgroup
             if m.typ().as_ref().unwrap() == "cgroup" {
-                println!("mount for cgroup has not yet been implemented");
+                println!("warning: mount for cgroup has not yet been implemented");
                 continue;
             }
 

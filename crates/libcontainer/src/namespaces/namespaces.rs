@@ -66,7 +66,9 @@ impl Namespaces {
                 // TODO: implement unshare for cgroup and network
                 if ns_type == &LinuxNamespaceType::Cgroup || ns_type == &LinuxNamespaceType::Network
                 {
-                    println!("unshare for cgroup and network has not yet been implemented");
+                    println!(
+                        "warning: unshare for cgroup and network has not yet been implemented"
+                    );
                     return Ok(());
                 }
 

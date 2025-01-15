@@ -1,7 +1,10 @@
-use nix::mount::{mount, MsFlags};
+use nix::{
+    mount::{mount, umount2, MntFlags, MsFlags},
+    unistd::{chdir, pivot_root},
+};
 use oci_spec::runtime::Mount;
 use std::{
-    fs::{copy, create_dir_all, read_link},
+    fs::{copy, create_dir_all, read_link, remove_dir},
     io::Result,
     os::unix::fs::symlink,
     path::{Path, PathBuf},
@@ -131,7 +134,7 @@ impl Mounter {
         Ok(())
     }
 
-    pub fn setup_rootfs(&self) -> Result<()> {
+    fn setup_rootfs(&self) -> Result<()> {
         // recursively copy the rootfs from bundle to new_root
         copy_dir_all(&self.bundle_root, &self.new_root)?;
 
@@ -153,7 +156,34 @@ impl Mounter {
             None,
         )?;
 
-        // setup mounts
-        self.setup_mount()
+        Ok(())
+    }
+
+    fn setup_pivot_root(&self) -> Result<()> {
+        // mkdir old root
+        let old_root = self.new_root.join(".oldroot");
+        create_dir_all(&old_root)?;
+
+        // pivot root
+        pivot_root(self.new_root.as_path(), old_root.as_path())?;
+
+        // chdir to /
+        chdir("/")?;
+
+        // umount old root
+        umount2("/.oldroot", MntFlags::MNT_DETACH)?;
+
+        // remove old root
+        remove_dir("/.oldroot")?;
+
+        Ok(())
+    }
+
+    pub fn setup(&self) -> Result<()> {
+        self.setup_rootfs()?;
+        self.setup_mount()?;
+        self.setup_pivot_root()?;
+
+        Ok(())
     }
 }

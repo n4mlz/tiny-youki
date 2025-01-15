@@ -4,7 +4,6 @@ use oci_spec::runtime::LinuxNamespaceType;
 use std::{
     ffi::OsString,
     io::{Error, ErrorKind, Result},
-    os::unix::process::CommandExt,
     process::{Command, Stdio},
 };
 
@@ -66,7 +65,7 @@ impl ContainerBuilder {
             .stderr(Stdio::inherit());
 
         // TODO: wait for start signal
-        cmd.exec();
+        cmd.spawn()?.wait()?;
 
         socket.send("created")?;
 

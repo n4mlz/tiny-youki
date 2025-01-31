@@ -65,9 +65,10 @@ impl ContainerBuilder {
             .stderr(Stdio::inherit());
 
         // TODO: wait for start signal
+        socket.send("running")?;
         cmd.spawn()?.wait()?;
 
-        socket.send("created")?;
+        socket.send("stopped")?;
 
         Ok(())
     }

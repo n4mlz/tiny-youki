@@ -67,15 +67,26 @@ impl ContainerBuilder {
         let init_pid: i32 = message.strip_prefix("init: ").unwrap().parse().unwrap();
         self.container.as_mut().unwrap().set_pid(init_pid)?;
 
+        // TODO: wait for start signal
         let message = socket.receive()?;
-        if message != "created" {
+        if message != "running" {
             panic!("Expected 'created', got '{}'", message);
         }
 
         self.container
             .as_mut()
             .unwrap()
-            .update_status(ContainerState::Created)?;
+            .update_status(ContainerState::Running)?;
+
+        let message = socket.receive()?;
+        if message != "stopped" {
+            panic!("Expected 'stopped', got '{}'", message);
+        }
+
+        self.container
+            .as_mut()
+            .unwrap()
+            .update_status(ContainerState::Stopped)?;
 
         Ok(())
     }

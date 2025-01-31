@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use libcontainer::ContainerBuilder;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -34,9 +35,7 @@ fn main() {
             container_id,
             bundle,
         } => {
-            println!("container_id: {}", container_id);
-            println!("bundle: {:?}", bundle);
-            libcontainer::ContainerBuilder::new(bundle)
+            ContainerBuilder::new(bundle)
                 .unwrap()
                 .create(container_id)
                 .unwrap();
